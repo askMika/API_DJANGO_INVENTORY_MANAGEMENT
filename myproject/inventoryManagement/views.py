@@ -162,8 +162,6 @@ class StockItemDetailView(APIView):
         except StockItem.DoesNotExist:
             return None      
         
- 
-
     # READ ONE
     def get(self, request, pk):
         StockItem = self.get_object(pk)
@@ -213,7 +211,7 @@ class StockItemDetailView(APIView):
         if not StockItem:
             return Response(
                 {"error": "Product not found."},
-               
+             
             )
         StockItem.delete()
      

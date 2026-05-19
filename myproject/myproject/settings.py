@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'authentication',
     'inventoryManagement',
+    'polymorphic'
 ]
 
 MIDDLEWARE = [
@@ -127,4 +128,10 @@ REST_FRAMEWORK = {
     ),
 }
 
+# custom user model
 AUTH_USER_MODEL = 'authentication.User'
+
+# Media files (for QR code images)
+import os
+MEDIA_URL  = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

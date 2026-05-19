@@ -8,6 +8,8 @@ djangorestframework-simplejwt = "*"
 django = "*"
 djangorestframework = "*"
 django-polymorphic = "*"
+qrcode = "*"
+pillow = "*"
 
 [dev-packages]
 

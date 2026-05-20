@@ -30,20 +30,26 @@ def api_root(request):
     return JsonResponse({
         'message': 'Inventory API running',
         'endpoints': [
+            '/admin/'
             '/products/',
             '/products/<id>/',
             '/register/',
             '/login/',
             '/refresh/',
+            'borrow/<int:pk>/', 
+            'return/<int:pk>/',
         ],
     })
 
 urlpatterns = [
+
     path('', api_root),
     path('admin/', admin.site.urls),
     path('', include('inventoryManagement.urls')),
     path('', include('authentication.urls')),
+    path('', include('library.urls')),
     
+
     path('token/', TokenObtainPairView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

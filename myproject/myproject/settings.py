@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'authentication',
     'inventoryManagement',
-    'polymorphic'
+    'polymorphic',
+    'library',
+    
 ]
 
 MIDDLEWARE = [

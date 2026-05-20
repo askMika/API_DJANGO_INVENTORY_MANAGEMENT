@@ -150,3 +150,133 @@ CORS_ALLOWED_ORIGINS = [
 
 # For development: allow all origins (change this in production)
 CORS_ALLOW_ALL_ORIGINS = True
+JAZZMIN_SETTINGS = {
+    # ── Branding ──────────────────────────────────────────────────────
+    "site_title":        "IMS Admin",
+    "site_header":       "Inventory Management System",
+    "site_brand":        "IMS",
+    "site_logo":         None,
+    "welcome_sign":      "Welcome to IMS Admin",
+    "copyright":         "IMS 2026",
+
+    # ── Top links ─────────────────────────────────────────────────────
+    "topmenu_links": [
+        {"name": "Home",      "url": "admin:index"},
+        {"name": "Site",      "url": "/",           "new_window": True},
+        {"app": "users"},
+        {"app": "inventoryManagement"},
+        {"app": "library"},
+    ],
+
+    # ── User menu ─────────────────────────────────────────────────────
+    "usermenu_links": [
+        {"name": "Support",   "url": "#", "new_window": True},
+        {"model": "auth.user"},
+    ],
+
+    # ── Sidebar ───────────────────────────────────────────────────────
+    "show_sidebar":          True,
+    "navigation_expanded":   True,
+    "hide_apps":             [],
+    "hide_models":           [],
+
+    # ── Order sidebar sections ────────────────────────────────────────
+    "order_with_respect_to": [
+        "users",
+        "inventoryManagement",
+        "library",
+        "auth",
+    ],
+
+    # ── Custom sidebar links ──────────────────────────────────────────
+    "custom_links": {
+        "inventoryManagement": [
+            {
+                "name":        "All Stock Items",
+                "url":         "admin:inventoryManagement_stockitem_changelist",
+                "icon":        "fas fa-boxes",
+                "permissions": ["is_staff"],
+            }
+        ],
+        "library": [
+            {
+                "name":        "Borrowed Books",
+                "url":         "admin:library_bookborrowed_changelist",
+                "icon":        "fas fa-book-open",
+                "permissions": ["is_staff"],
+            }
+        ],
+    },
+
+    # ── Icons ─────────────────────────────────────────────────────────
+    "icons": {
+        # Users app
+        "users.User":           "fas fa-user",
+        "users.TeacherProxy":   "fas fa-chalkboard-teacher",
+        "users.LearnerProxy":   "fas fa-user-graduate",
+        "users.CookProxy":      "fas fa-utensils",
+        "users.LibrarianProxy": "fas fa-book-reader",
+
+        # Inventory app
+        "inventoryManagement.Product":            "fas fa-box",
+        "inventoryManagement.StationeryProduct":  "fas fa-pen",
+        "inventoryManagement.FoodProduct":        "fas fa-apple-alt",
+        "inventoryManagement.BookProduct":        "fas fa-book",
+        "inventoryManagement.TextbookProduct":    "fas fa-graduation-cap",
+        "inventoryManagement.StockItem":          "fas fa-boxes",
+        "inventoryManagement.StationeryStockItem":"fas fa-pen-nib",
+        "inventoryManagement.FoodStockItem":      "fas fa-drumstick-bite",
+        "inventoryManagement.BookStockItem":      "fas fa-bookmark",
+        "inventoryManagement.TextbookStockItem":  "fas fa-book-open",
+        "inventoryManagement.OtherStockItem":     "fas fa-question-circle",
+
+        # Library app
+        "library.BookBorrowed": "fas fa-hand-holding-heart",
+        "library.Bill":         "fas fa-file-invoice-dollar",
+
+        # Auth
+        "auth.Group": "fas fa-users",
+    },
+
+    "default_icon_parents":  "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+
+    # ── UI tweaks ──────────────────────────────────────────────────────
+    "related_modal_active":   True,
+    "custom_css":             None,
+    "custom_js":              None,
+    "use_google_fonts_cdn":   True,
+    "show_ui_builder":        False,    # set True to customise live
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text":        False,
+    "footer_small_text":        False,
+    "body_small_text":          False,
+    "brand_small_text":         False,
+    "brand_colour":             "navbar-dark",
+    "accent":                   "accent-primary",
+    "navbar":                   "navbar-dark",
+    "no_navbar_border":         False,
+    "navbar_fixed":             True,
+    "layout_boxed":             False,
+    "footer_fixed":             False,
+    "sidebar_fixed":            True,
+    "sidebar":                  "sidebar-dark-primary",
+    "sidebar_nav_small_text":   False,
+    "sidebar_disable_expand":   False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style":False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style":   False,
+    "theme":                    "default",
+    "dark_mode_theme":          None,
+    "button_classes": {
+        "primary":   "btn-outline-primary",
+        "secondary": "btn-outline-secondary",
+        "info":      "btn-info",
+        "warning":   "btn-warning",
+        "danger":    "btn-danger",
+        "success":   "btn-success",
+    },
+}

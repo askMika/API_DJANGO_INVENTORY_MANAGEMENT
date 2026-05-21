@@ -43,7 +43,7 @@ def api_root(request):
 
 urlpatterns = [
 
-    path('', api_root),
+    
     path('admin/', admin.site.urls),
     path('', include('inventoryManagement.urls')),
     path('', include('authentication.urls')),

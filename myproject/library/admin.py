@@ -2,6 +2,7 @@
 from django.contrib import admin
 from .models import BookBorrowed,Bill
 
+
 @admin.register(BookBorrowed)
 class BorrowRecordAdmin(admin.ModelAdmin):
     list_display = ("book_item", "learner", "librarian", "borrowed_at", "returned_at")
@@ -12,3 +13,6 @@ class BorrowRecordAdmin(admin.ModelAdmin):
 class BillAdmin(admin.ModelAdmin):
     list_display = ("learner", "total_amount", "lost_books", "late_returns")
     search_fields = ("learner__user__username",)
+
+    from django.contrib import admin
+from .models import BookStockItem

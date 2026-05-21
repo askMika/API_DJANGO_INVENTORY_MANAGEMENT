@@ -7,6 +7,15 @@ from inventoryManagement.models import BookStockItem
 from authentication.models import LearnerProfile, LibrarianProfile
 from .models import BookBorrowed
 
+from .serializers import BookStockItemSerializer
+
+class BookStockItemListView(APIView):
+
+    def get(self, request):
+        items = BookStockItem.objects.all()
+        serializer = BookStockItemSerializer(items, many=True)
+        return Response(serializer.data)
+
 class BorrowBookView(APIView):
     def post(self, request, pk):
         learner_id = request.data.get("learner_id")

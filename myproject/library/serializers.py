@@ -2,7 +2,14 @@ from rest_framework import serializers
 from .models import BookBorrowed, Bill
 from inventoryManagement.serializers import BookStockItemSerializer
 from authentication.models import LearnerProfile, LibrarianProfile
+from inventoryManagement.models import BookStockItem
 
+class BookStockItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookStockItem
+        name = serializers.CharField(source='product.name', read_only=True)
+        id = serializers.IntegerField(read_only=True)
+  
 
 class BookBorrowedSerializer(serializers.ModelSerializer):
     book_item = BookStockItemSerializer(read_only=True)

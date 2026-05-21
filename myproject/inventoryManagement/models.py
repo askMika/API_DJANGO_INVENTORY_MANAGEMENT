@@ -1,10 +1,9 @@
-import uuid
 import qrcode
 from io import BytesIO
 from django.db import models
 from django.core.files import File
+from django.utils import timezone
 from polymorphic.models import PolymorphicModel
-
 
 
 # QR CODE HELPER
@@ -24,19 +23,21 @@ def generate_qr(data: str, filename: str):
     return File(buffer, name=filename)
 
 
-
 # BASE PRODUCT
-
 class Product(PolymorphicModel):
     name        = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    price       = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at  = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    updated_at  = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    qr_code     = models.ImageField(upload_to='qr_codes/products/', blank=True, null=True)
+
     @property
     def quantity(self):
-         return StockItem.objects.filter(product=self).count()
-    price       = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
-    qr_code     = models.ImageField(upload_to='qr_codes/products/', blank=True, null=True)
+        mgr = getattr(self, 'items', None)
+        return mgr.count() if mgr is not None else 0
+
+    quantity.fget.short_description = 'Quantity'
 
     def __str__(self):
         return self.name
@@ -53,11 +54,11 @@ class Product(PolymorphicModel):
         self.qr_code.save(filename, generate_qr(data, filename), save=False)
 
     def save(self, *args, **kwargs):
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
         if not self.qr_code:
             self.generate_qr_code()
             super().save(*args, **kwargs)
-
 
 
 # PRODUCT TYPES
@@ -84,7 +85,7 @@ class StationeryProduct(Product):
 
 
 class FoodProduct(Product):
-    expiry_date   = models.DateField()
+    expiry_date   = models.DateField(null=True, blank=True)
     supplier      = models.CharField(max_length=100, blank=True)
     is_perishable = models.BooleanField(default=True)
     storage_temp  = models.CharField(
@@ -122,6 +123,8 @@ class BookProduct(Product):
     published_year = models.IntegerField(null=True, blank=True)
     language       = models.CharField(max_length=50, default='English')
     pages          = models.IntegerField(null=True, blank=True)
+    image          = models.ImageField(upload_to='products/books/', blank=True, null=True)
+
 
     class Meta:
         verbose_name        = "Book"
@@ -149,14 +152,15 @@ class TextbookProduct(Product):
         ],
         default='caps'
     )
+    image          = models.ImageField(upload_to='products/textbooks/', blank=True, null=True)
+
 
     class Meta:
         verbose_name        = "Textbook"
         verbose_name_plural = "Textbooks"
 
 
-
-# BASE STOCK ITEM  (Polymorphic hierarchy)
+# BASE STOCK ITEM
 class StockItem(PolymorphicModel):
 
     STATUS_CHOICES = [
@@ -174,37 +178,24 @@ class StockItem(PolymorphicModel):
         ('poor', 'Poor'),
     ]
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.product.quantity = StockItem.objects.filter(
-            product=self.product
-        ).count()
-        self.product.save()
-
-    def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
-        self.product.quantity = StockItem.objects.filter(
-            product=self.product
-        ).count()
-        self.product.save()
-
     qr_code    = models.ImageField(upload_to='qr_codes/stock/', blank=True, null=True)
     status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
     condition  = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='new')
-    added_at   = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    added_at   = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
     notes      = models.TextField(blank=True)
 
     def __str__(self):
-        return f"{self.product.name} — Item #{self.id} ({self.status})"
-    
+        product = getattr(self, 'product', None)
+        name = product.name if product else "Unknown"
+        return f"{name} — Item #{self.id} ({self.status})"
 
     def generate_qr_code(self):
+        product = getattr(self, 'product', None)
+        product_name = product.name if product else "Unknown"
         data = (
             f"Item ID: {self.id}\n"
-            f"Product: {self.product.name}\n"
+            f"Product: {product_name}\n"
             f"Type: {self.__class__.__name__}\n"
             f"Status: {self.status}\n"
             f"Condition: {self.condition}"
@@ -213,6 +204,7 @@ class StockItem(PolymorphicModel):
         self.qr_code.save(filename, generate_qr(data, filename), save=False)
 
     def save(self, *args, **kwargs):
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
         if not self.qr_code:
             self.generate_qr_code()
@@ -221,15 +213,15 @@ class StockItem(PolymorphicModel):
     class Meta:
         verbose_name        = "Stock Item"
         verbose_name_plural = "Stock Items"
-        ordering            = ['product', 'id']
+        ordering            = ['id']
 
 
-#─────────────────────────────────────────────────────────────────────
-# STOCK ITEM TYPES  (hierarchy)
+# STOCK ITEM TYPES
 
 class StationeryStockItem(StockItem):
+    product  = models.ForeignKey(StationeryProduct, on_delete=models.CASCADE, related_name='items', null=True, blank=True)
     colour   = models.CharField(max_length=50, blank=True)
-    quantity = models.IntegerField(default=1)    # e.g. a pack of 10 pens
+    quantity = models.IntegerField(default=1)
 
     class Meta:
         verbose_name        = "Stationery Stock Item"
@@ -237,6 +229,7 @@ class StationeryStockItem(StockItem):
 
 
 class FoodStockItem(StockItem):
+    product      = models.ForeignKey(FoodProduct, on_delete=models.CASCADE, related_name='items', null=True, blank=True)
     expiry_date  = models.DateField(null=True, blank=True)
     batch_number = models.CharField(max_length=50, blank=True)
     weight_kg    = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank=True)
@@ -247,6 +240,7 @@ class FoodStockItem(StockItem):
 
 
 class BookStockItem(StockItem):
+    product      = models.ForeignKey(BookProduct, on_delete=models.CASCADE, related_name='items', null=True, blank=True)
     copy_number  = models.IntegerField(default=1)
     is_available = models.BooleanField(default=True)
 
@@ -256,24 +250,12 @@ class BookStockItem(StockItem):
 
 
 class TextbookStockItem(StockItem):
-    copy_number    = models.IntegerField(default=1)
-    issued_to      = models.CharField(max_length=200, blank=True)   # learner name
-    is_available   = models.BooleanField(default=True)
-    return_date    = models.DateField(null=True, blank=True)
+    product      = models.ForeignKey(TextbookProduct, on_delete=models.CASCADE, related_name='items', null=True, blank=True)
+    copy_number  = models.IntegerField(default=1)
+    issued_to    = models.CharField(max_length=200, blank=True)
+    is_available = models.BooleanField(default=True)
+    return_date  = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name        = "Textbook Stock Item"
         verbose_name_plural = "Textbook Stock Items"
-
-
-class OtherStockItem(StockItem):
-    """
-    For any unknown or uncategorised items that need to be stored.
-    """
-    item_type    = models.CharField(max_length=100, blank=True)   # user defined type
-    serial_number= models.CharField(max_length=100, blank=True)
-    location     = models.CharField(max_length=100, blank=True)   # where it is stored
-
-    class Meta:
-        verbose_name        = "Other Stock Item"
-        verbose_name_plural = "Other Stock Items"

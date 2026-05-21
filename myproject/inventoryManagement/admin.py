@@ -8,8 +8,17 @@ from polymorphic.admin import (
 from .models import (
     Product, StationeryProduct, FoodProduct, BookProduct, TextbookProduct,
     StockItem, StationeryStockItem, FoodStockItem, BookStockItem,
-    TextbookStockItem, OtherStockItem,
+    TextbookStockItem,
 )
+# IMAGE PREVIEW HELPER
+def image_preview(obj):
+    if obj.image:
+        return format_html(
+            '<img src="{}" width="80" height="80" style="border-radius:4px; object-fit:cover;" />',
+            obj.image.url
+        )
+    return "—"
+image_preview.short_description = "Cover"
 
 
 # QR CODE PREVIEW HELPER
@@ -23,35 +32,49 @@ def qr_preview(obj):
 qr_preview.short_description = "QR Code"
 
 
-# STOCK ITEM INLINES  (shown inside each product page)
+# STOCK ITEM INLINES
 class StationeryStockItemInline(admin.TabularInline):
-    model       = StationeryStockItem
-    extra       = 1
-    fields      = ['status', 'condition', 'colour', 'quantity', 'notes']
+    model  = StationeryStockItem
+    extra  = 1
+    fields = ['status', 'condition', 'colour', 'quantity', 'notes']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = StationeryProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class FoodStockItemInline(admin.TabularInline):
-    model       = FoodStockItem
-    extra       = 1
-    fields      = ['status', 'condition', 'expiry_date', 'batch_number', 'weight_kg', 'notes']
+    model  = FoodStockItem
+    extra  = 1
+    fields = ['status', 'condition', 'expiry_date', 'batch_number', 'weight_kg', 'notes']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = FoodProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class BookStockItemInline(admin.TabularInline):
-    model       = BookStockItem
-    extra       = 1
-    fields      = ['status', 'condition', 'copy_number', 'is_available', 'notes']
+    model  = BookStockItem
+    extra  = 1
+    fields = ['status', 'condition', 'copy_number', 'is_available', 'notes']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = BookProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class TextbookStockItemInline(admin.TabularInline):
-    model       = TextbookStockItem
-    extra       = 1
-    fields      = ['status', 'condition', 'copy_number', 'issued_to', 'is_available', 'return_date', 'notes']
+    model  = TextbookStockItem
+    extra  = 1
+    fields = ['status', 'condition', 'copy_number', 'issued_to', 'is_available', 'return_date', 'notes']
 
-
-class OtherStockItemInline(admin.TabularInline):
-    model       = OtherStockItem
-    extra       = 1
-    fields      = ['status', 'condition', 'item_type', 'serial_number', 'location', 'notes']
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = TextbookProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 # PRODUCT CHILD ADMINS
@@ -62,7 +85,7 @@ class StationeryProductAdmin(PolymorphicChildModelAdmin):
     list_display    = ['name', 'brand', 'category', 'colour', 'price', 'quantity', qr_preview]
     search_fields   = ['name', 'brand']
     list_filter     = ['category', 'colour', 'brand']
-    readonly_fields = ['qr_code', qr_preview]
+    readonly_fields = ['quantity', 'qr_code', qr_preview]
 
     fieldsets = (
         ("Product Info",    {"fields": ("name", "description", "price", "quantity")}),
@@ -78,7 +101,7 @@ class FoodProductAdmin(PolymorphicChildModelAdmin):
     list_display    = ['name', 'supplier', 'expiry_date', 'storage_temp', 'price', 'quantity', qr_preview]
     search_fields   = ['name', 'supplier']
     list_filter     = ['is_perishable', 'storage_temp']
-    readonly_fields = ['qr_code', qr_preview]
+    readonly_fields = ['quantity', 'qr_code', qr_preview]
 
     fieldsets = (
         ("Product Info", {"fields": ("name", "description", "price", "quantity")}),
@@ -87,47 +110,59 @@ class FoodProductAdmin(PolymorphicChildModelAdmin):
     )
 
 
+
 @admin.register(BookProduct)
 class BookProductAdmin(PolymorphicChildModelAdmin):
     base_model      = BookProduct
     inlines         = [BookStockItemInline]
-    list_display    = ['name', 'author', 'genre', 'publisher', 'price', 'quantity', qr_preview]
+    list_display    = ['name', 'author', 'genre', 'publisher', 'price', 'quantity', image_preview, qr_preview]
     search_fields   = ['name', 'author', 'isbn']
     list_filter     = ['genre', 'language']
-    readonly_fields = ['qr_code', qr_preview]
+    readonly_fields = ['quantity', 'qr_code', qr_preview, image_preview]
 
     fieldsets = (
         ("Product Info", {"fields": ("name", "description", "price", "quantity")}),
         ("Book Info",    {"fields": ("author", "isbn", "publisher", "genre", "published_year", "language", "pages")}),
+        ("Cover Image",  {"fields": ("image", image_preview)}),
         ("QR Code",      {"fields": ("qr_code", qr_preview)}),
     )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = BookProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(TextbookProduct)
 class TextbookProductAdmin(PolymorphicChildModelAdmin):
     base_model      = TextbookProduct
     inlines         = [TextbookStockItemInline]
-    list_display    = ['name', 'author', 'subject', 'grade', 'curriculum', 'price', 'quantity', qr_preview]
+    list_display    = ['name', 'author', 'subject', 'grade', 'curriculum', 'price', 'quantity', image_preview, qr_preview]
     search_fields   = ['name', 'author', 'subject', 'isbn']
     list_filter     = ['grade', 'subject', 'curriculum']
-    readonly_fields = ['qr_code', qr_preview]
+    readonly_fields = ['quantity', 'qr_code', qr_preview, image_preview]
 
     fieldsets = (
         ("Product Info",  {"fields": ("name", "description", "price", "quantity")}),
         ("Textbook Info", {"fields": ("author", "isbn", "publisher", "subject", "grade", "edition", "published_year", "curriculum")}),
+        ("Cover Image",   {"fields": ("image", image_preview)}),
         ("QR Code",       {"fields": ("qr_code", qr_preview)}),
     )
 
-
-# PRODUCT PARENT ADMIN  (shows ALL products)
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = TextbookProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+# PRODUCT PARENT ADMIN
 @admin.register(Product)
 class ProductAdmin(PolymorphicParentModelAdmin):
-    base_model    = Product
-    list_display  = ['name', 'price', 'quantity', 'created_at', 'polymorphic_ctype', qr_preview]
-    list_filter   = [PolymorphicChildModelFilter]
-    search_fields = ['name']
-    readonly_fields = [qr_preview]
-    child_models  = [
+    base_model      = Product
+    list_display    = ['name', 'price', 'quantity', 'created_at', 'polymorphic_ctype', qr_preview]
+    list_filter     = [PolymorphicChildModelFilter]
+    search_fields   = ['name']
+    readonly_fields = ['quantity', qr_preview]
+    child_models    = [
         StationeryProduct,
         FoodProduct,
         BookProduct,
@@ -152,6 +187,11 @@ class StationeryStockItemAdmin(PolymorphicChildModelAdmin):
         ("Timestamps",      {"fields": ("added_at", "updated_at")}),
     )
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = StationeryProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(FoodStockItem)
 class FoodStockItemAdmin(PolymorphicChildModelAdmin):
@@ -168,6 +208,11 @@ class FoodStockItemAdmin(PolymorphicChildModelAdmin):
         ("QR Code",    {"fields": ("qr_code", qr_preview)}),
         ("Timestamps", {"fields": ("added_at", "updated_at")}),
     )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = FoodProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(BookStockItem)
@@ -186,6 +231,11 @@ class BookStockItemAdmin(PolymorphicChildModelAdmin):
         ("Timestamps", {"fields": ("added_at", "updated_at")}),
     )
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = BookProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(TextbookStockItem)
 class TextbookStockItemAdmin(PolymorphicChildModelAdmin):
@@ -203,36 +253,23 @@ class TextbookStockItemAdmin(PolymorphicChildModelAdmin):
         ("Timestamps",    {"fields": ("added_at", "updated_at")}),
     )
 
-
-@admin.register(OtherStockItem)
-class OtherStockItemAdmin(PolymorphicChildModelAdmin):
-    base_model      = OtherStockItem
-    list_display    = ['id', 'product', 'item_type', 'serial_number', 'location', 'status', 'condition', qr_preview]
-    list_filter     = ['status', 'condition']
-    search_fields   = ['product__name', 'item_type', 'serial_number', 'location']
-    readonly_fields = ['qr_code', qr_preview, 'added_at', 'updated_at']
-
-    fieldsets = (
-        ("Item Info",  {"fields": ("product", "status", "condition")}),
-        ("Other Info", {"fields": ("item_type", "serial_number", "location")}),
-        ("Notes",      {"fields": ("notes",)}),
-        ("QR Code",    {"fields": ("qr_code", qr_preview)}),
-        ("Timestamps", {"fields": ("added_at", "updated_at")}),
-    )
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'product':
+            kwargs['queryset'] = TextbookProduct.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-# STOCK ITEM PARENT ADMIN  (shows ALL stock items)
+# STOCK ITEM PARENT ADMIN
 @admin.register(StockItem)
 class StockItemAdmin(PolymorphicParentModelAdmin):
-    base_model    = StockItem
-    list_display  = ['id', 'product', 'status', 'condition', 'added_at', 'polymorphic_ctype', qr_preview]
-    list_filter   = [PolymorphicChildModelFilter, 'status', 'condition']
-    search_fields = ['product__name']
+    base_model      = StockItem
+    list_display    = ['id', 'status', 'condition', 'added_at', 'polymorphic_ctype', qr_preview]
+    list_filter     = [PolymorphicChildModelFilter, 'status', 'condition']
+    search_fields   = []
     readonly_fields = [qr_preview]
-    child_models  = [
+    child_models    = [
         StationeryStockItem,
         FoodStockItem,
         BookStockItem,
         TextbookStockItem,
-        OtherStockItem,
     ]

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Product, StationeryProduct, FoodProduct, BookProduct, TextbookProduct,
     StockItem, StationeryStockItem, FoodStockItem, BookStockItem,
-    TextbookStockItem, OtherStockItem,
+    TextbookStockItem,
 )
 
 
@@ -36,7 +36,8 @@ class BookProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'price', 'quantity',
             'author', 'isbn', 'publisher', 'genre',
-            'published_year', 'language', 'pages', 'qr_code',
+            'published_year', 'language', 'pages',
+            'image', 'qr_code',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['qr_code', 'created_at', 'updated_at']
@@ -48,7 +49,8 @@ class TextbookProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'price', 'quantity',
             'author', 'isbn', 'publisher', 'subject',
-            'grade', 'edition', 'published_year', 'curriculum', 'qr_code',
+            'grade', 'edition', 'published_year', 'curriculum',
+            'image', 'qr_code',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['qr_code', 'created_at', 'updated_at']
@@ -99,12 +101,13 @@ class FoodStockItemSerializer(serializers.ModelSerializer):
 
 
 class BookStockItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_name  = serializers.CharField(source='product.name', read_only=True)
+    product_image = serializers.ImageField(source='product.image', read_only=True)
 
     class Meta:
         model  = BookStockItem
         fields = [
-            'id', 'product', 'product_name',
+            'id', 'product', 'product_name', 'product_image',
             'status', 'condition', 'copy_number', 'is_available',
             'notes', 'qr_code', 'added_at', 'updated_at',
         ]
@@ -112,31 +115,19 @@ class BookStockItemSerializer(serializers.ModelSerializer):
 
 
 class TextbookStockItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_name  = serializers.CharField(source='product.name', read_only=True)
+    product_image = serializers.ImageField(source='product.image', read_only=True)
 
     class Meta:
         model  = TextbookStockItem
         fields = [
-            'id', 'product', 'product_name',
+            'id', 'product', 'product_name', 'product_image',
             'status', 'condition', 'copy_number',
             'issued_to', 'is_available', 'return_date',
             'notes', 'qr_code', 'added_at', 'updated_at',
         ]
         read_only_fields = ['qr_code', 'added_at', 'updated_at']
 
-
-class OtherStockItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
-
-    class Meta:
-        model  = OtherStockItem
-        fields = [
-            'id', 'product', 'product_name',
-            'status', 'condition', 'item_type',
-            'serial_number', 'location',
-            'notes', 'qr_code', 'added_at', 'updated_at',
-        ]
-        read_only_fields = ['qr_code', 'added_at', 'updated_at']
 
 
 class StockItemSerializer(serializers.ModelSerializer):

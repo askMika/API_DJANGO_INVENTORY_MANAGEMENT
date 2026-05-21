@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import (Product, StationeryProduct, FoodProduct, BookProduct, TextbookProduct, StockItem,StationeryStockItem,
-                      FoodStockItem,BookStockItem,TextbookStockItem,OtherStockItem)
+                      FoodStockItem,BookStockItem,TextbookStockItem)
 
 from .serializers import (
     ProductSerializer,
@@ -16,7 +16,7 @@ from .serializers import (
     FoodStockItemSerializer,
     BookStockItemSerializer,
     TextbookStockItemSerializer,
-    OtherStockItemSerializer, 
+    
 )
 
 SERIALIZER_MAP = {
@@ -31,7 +31,7 @@ STOCK_SERIALIZER_MAP = {
     'food':       (FoodStockItemSerializer, FoodStockItem),
     'book':       (BookStockItemSerializer, BookStockItem),
     'textbook':   (TextbookStockItemSerializer, TextbookStockItem),
-    'other':      (OtherStockItemSerializer, OtherStockItem),
+    
 }
 #  List all & Create 
 class ProductListView(APIView):

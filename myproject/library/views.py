@@ -15,28 +15,26 @@ class BookStockItemListView(APIView):
         items = BookStockItem.objects.all()
         serializer = BookStockItemSerializer(items, many=True)
         return Response(serializer.data)
+# library/views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import BookBorrowedSerializer
+from .service import borrow_book
 
 class BorrowBookView(APIView):
     def post(self, request, pk):
         learner_id = request.data.get("learner_id")
         librarian_id = request.data.get("librarian_id")
+
         try:
-            book_item = BookStockItem.objects.get(pk=pk, available=True)
-            learner = LearnerProfile.objects.get(pk=learner_id)
-            librarian = LibrarianProfile.objects.get(pk=librarian_id)
-
-            record = BookBorrowed.objects.create(
-                book_item=book_item,
-                learner=learner,
-                librarian=librarian
-            )
-            book_item.available = False
-            book_item.save()
-
+            record = borrow_book(pk, learner_id, librarian_id)
             serializer = BookBorrowedSerializer(record)
-            Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class ReturnBookView(APIView):
     def post(self, request, pk):

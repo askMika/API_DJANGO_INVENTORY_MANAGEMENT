@@ -10,11 +10,23 @@ class BookStockItemSerializer(serializers.ModelSerializer):
         name = serializers.CharField(source='product.name', read_only=True)
         id = serializers.IntegerField(read_only=True)
   
+class BookStockItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookStockItem
+        name = serializers.CharField(source='product.name', read_only=True)
+        id = serializers.IntegerField(read_only=True)
+  
+class BookStockItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookStockItem
+        name = serializers.CharField(source='product.name', read_only=True)
+        id = serializers.IntegerField(read_only=True)
+  
 
 class BookBorrowedSerializer(serializers.ModelSerializer):
     book_item = BookStockItemSerializer(read_only=True)
-    learner = serializers.StringRelatedField(read_only=True)
-    librarian = serializers.StringRelatedField(read_only=True)
+    LearnerProfile = serializers.StringRelatedField(read_only=True)
+    librarianProfile = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = BookBorrowed

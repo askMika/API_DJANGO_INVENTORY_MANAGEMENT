@@ -1,35 +1,43 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
+    role = models.CharField(max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
-    ROLE_CHOICES = (
-        ('admin', 'Admin'),
-        ('teacher', 'Teacher'),
-        ('learner', 'Learner'),
-        ('librarian', 'Librarian'),
-        ('cook', 'Cook'),
-    )
+    class Meta:
+        db_table = 'users'
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-
-    def __str__(self):
-        return self.username
-    
 class TeacherProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
- 
-    
+    id = models.BigAutoField(primary_key=True)
+    user = models.OneToOneField(User, models.CASCADE)
+
+    class Meta:
+        db_table = 'authentication_teacherprofile'
 
 class LearnerProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
- 
+    id = models.BigAutoField(primary_key=True)
+    user = models.OneToOneField(User, models.CASCADE)
+
+    class Meta:
+        db_table = 'authentication_learnerprofile'
 
 class CookProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-  
+    id = models.BigAutoField(primary_key=True)
+    user = models.OneToOneField(User, models.CASCADE)
+
+    class Meta:
+        db_table = 'authentication_cookprofile'
 
 class LibrarianProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-   
+    id = models.BigAutoField(primary_key=True)
+    user = models.OneToOneField(User, models.CASCADE)
 
+    class Meta:
+        db_table = 'authentication_librarianprofile'

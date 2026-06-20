@@ -1,16 +1,25 @@
 ﻿from django.db import models
 
 class InventorymanagementProduct(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(blank=True, null=True)
-    qr_code = models.CharField(max_length=100, blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    # Django auto-generates 'id' as a SERIAL PRIMARY KEY by default if not specified,
+    # but since you are using an existing legacy/inspectdb table layout:
+    id = models.AutoField(primary_key=True)
+    
+    name = models.CharField(max_length=255, blank=True, null=True)
+    brand = models.CharField(max_length=100, blank=True, null=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    qty = models.IntegerField(default=0, blank=True, null=True)
+    received = models.DateField(blank=True, null=True)  # Using DateField for raw tracking
+    supplier = models.CharField(max_length=255, blank=True, null=True)
+    condition = models.CharField(max_length=100, blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Text or URL fields to store links/paths to the images and QR codes
+    image = models.TextField(blank=True, null=True)     
+    qrcode = models.TextField(blank=True, null=True)    
 
     class Meta:
-        db_table = 'inventoryManagement_product'
+        db_table = 'inventorymanagement_product'  # Forces Django to target your exact SQL tabl
 
 class InventorymanagementBookproduct(models.Model):
     product_ptr = models.OneToOneField(InventorymanagementProduct, models.CASCADE, primary_key=True)

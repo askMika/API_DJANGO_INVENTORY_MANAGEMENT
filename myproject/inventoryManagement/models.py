@@ -33,7 +33,7 @@ class InventorymanagementBookproduct(models.Model):
     image = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        db_table = 'inventoryManagement_bookproduct'
+        db_table = 'book'
 
 class InventorymanagementFoodproduct(models.Model):
     product_ptr = models.OneToOneField(InventorymanagementProduct, models.CASCADE, primary_key=True)

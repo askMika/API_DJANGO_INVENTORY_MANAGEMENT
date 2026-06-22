@@ -1,26 +1,40 @@
 from django.db import models
 from datetime import date
 
-class BorrowedBooks(models.Model):
-    id = models.AutoField(primary_key=True)
-    learner_id = models.CharField(max_length=50)
-    asset_id = models.IntegerField()  
-    borrowed_date = models.DateField(default=date.today)
+class BorrowedBook(models.Model):
+    # Auto-incrementing primary key is handled implicitly by Django as 'id'
     
-    # DurationField handles PostgreSQL intervals natively behind the scenes
-    loan_period = models.DurationField(help_text="Expected format: 'DD HH:MM:SS'")
-    due_date = models.DateField()
-    librarian_id = models.CharField(max_length=50)
-    
+    learner_username = models.CharField(
+        max_length=150, 
+        help_text="The username of the student/learner borrowing the item."
+    )
+    asset_id = models.IntegerField(
+        help_text="The asset tracking number linked to the specific physical book unit."
+    )
+    borrowed_date = models.DateField(
+        default=date.today, 
+        help_text="The record date indicating when the checkout sequence was committed."
+    )
+    loan_period = models.DurationField(
+        help_text="The time window allocation (stores as a timedelta natively)."
+    )
+    due_date = models.DateField(
+        help_text="The hard calendar expiration date for active possession."
+    )
+    librarian_username = models.CharField(
+        max_length=150, 
+        help_text="The username of the logged-in librarian issuing the checkout transaction."
+    )
     status = models.CharField(
         max_length=20, 
         default='Active', 
-        choices=[('Active', 'Active'), ('Returned', 'Returned'), ('Overdue', 'Overdue')]
+        help_text="Lifecycle state tracking parameter ('Active', 'Returned', 'Overdue')."
     )
 
     class Meta:
-        db_table = 'borrowed_books'  # Forces clean lowercase database table binding
-        ordering = ['-due_date']     # Puts closest upcoming deadlines at the top of query sets
+        db_table = 'borrowed_books'
+        verbose_name = 'Borrowed Book'
+        verbose_name_plural = 'Borrowed Books'
 
     def __str__(self):
-        return f"Asset {self.asset_id} borrowed by Learner {self.learner_id}"
+        return f"Asset {self.asset_id} loaned to {self.learner_username}"

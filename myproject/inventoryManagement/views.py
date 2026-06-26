@@ -237,12 +237,39 @@ def checkBookExistsByISBN(request, isbn):
 def addToQueue(request):
     book_isbn=request.data.get('isbn')
     student_username=request.data.get('username')
-    added_at=request.data.get('added_at')
+  #  added_at=request.data.get('added_at')
     _status=request.data.get('status')
 
-    if not book_isbn or not student_username or not added_at or not _status:
+    if not book_isbn or not student_username  or not _status:
         return Response({"error":"missing fields"},status=status.HTTP_400_BAD_REQUEST)
     
     with connection.cursor() as cursor:
-        cursor.execute("INSERT INTO book_queue(%s,%s,%s,%s)",[book_isbn],[student_username],[added_at],[_status])
-    return Response({""} ,status=status.HTTP_201_CREATED)
+        cursor.execute("INSERT INTO book_queue (book_isbn, student_username, status) VALUES (%s, %s, %s)",[book_isbn,student_username,_status])
+    return Response({"found"} ,status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+def getAllQueueEntries(request):
+    with connection.cursor() as cursor:
+        # Performs an inner join to fetch the human-readable book title alongside the entry details
+        cursor.execute("""
+            SELECT q.id, q.book_isbn, q.student_username, q.added_at, q.status, b.title 
+            FROM book_queue q
+            JOIN book b ON q.book_isbn = b.isbn
+            WHERE q.status != 'completed'
+            ORDER BY q.added_at ASC
+        """)
+        rows = cursor.fetchall()
+
+    # Format rows explicitly into clear JavaScript-friendly objects
+    queue_list = []
+    for row in rows:
+        queue_list.append({
+            "id": row[0],
+            "isbn": row[1],
+            "username": row[2],
+            "added_at": row[3].strftime("%Y-%m-%d %H:%M") if row[3] else "—",
+            "status": row[4],
+            "book_title": row[5]
+        })
+
+    return Response(queue_list, status=status.HTTP_200_OK)

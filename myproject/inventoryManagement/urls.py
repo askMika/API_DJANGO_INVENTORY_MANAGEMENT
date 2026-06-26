@@ -5,6 +5,7 @@ from inventoryManagement.views import (
     StockItemListView, 
     StockItemDetailView,
     addToQueue,
+    getAllQueueEntries,
     checkBookExistsByISBN,
     check_book_exists,  # Imported functional view
     get_book_by_id,
@@ -25,5 +26,6 @@ urlpatterns = [
     path('books/<int:pk>/exists/', check_book_exists, name='book-exists'),
     path('books/<str:isbn>/checkin/', getBookByISBN, name='checkin-book'),
     path('books/<str:isbn>/isExisting/',checkBookExistsByISBN, name='check-ifExists'),
-    path('books/queue',addToQueue)
+    path('books/queue',addToQueue),
+    path('book/getQueue',getAllQueueEntries)
 ]

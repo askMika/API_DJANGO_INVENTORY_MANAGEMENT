@@ -214,3 +214,35 @@ def check_book_exists(request, pk):
     
     exists = row[0] if row else False
     return Response({"exists": exists}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def getBookByISBN(request, isbn):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, title, author, category, isbn FROM book WHERE isbn = %s",[isbn])
+        row=cursor.fetchone()
+    if not row:
+        return Response({"error": "book not found"},status=status.HTTP_404_NOT_FOUND)
+    return Response({"id": row[0],"title": row[1],"author": row[2],"category": row[3],"isbn": row[4]},status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def checkBookExistsByISBN(request, isbn):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT EXISTS(SELECT 1 FROM book WHERE isbn = %s)",[isbn])
+        row = cursor.fetchone();
+    
+    exists=row[0] if row else False
+    return Response({"exists": exists}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def addToQueue(request):
+    book_isbn=request.data.get('isbn')
+    student_username=request.data.get('username')
+    added_at=request.data.get('added_at')
+    _status=request.data.get('status')
+
+    if not book_isbn or not student_username or not added_at or not _status:
+        return Response({"error":"missing fields"},status=status.HTTP_400_BAD_REQUEST)
+    
+    with connection.cursor() as cursor:
+        cursor.execute("INSERT INTO book_queue(%s,%s,%s,%s)",[book_isbn],[student_username],[added_at],[_status])
+    return Response({""} ,status=status.HTTP_201_CREATED)

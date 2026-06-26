@@ -4,8 +4,11 @@ from inventoryManagement.views import (
     ProductDetailView, 
     StockItemListView, 
     StockItemDetailView,
+    addToQueue,
+    checkBookExistsByISBN,
     check_book_exists,  # Imported functional view
-    get_book_by_id      # Imported functional view
+    get_book_by_id,
+    getBookByISBN      # Imported functional view
 )
 
 urlpatterns = [
@@ -20,4 +23,7 @@ urlpatterns = [
     # FIXED: Routing directly to standalone functions to prevent class TypeErrors
     path('books/<int:pk>/', get_book_by_id, name='get-book-by-id'),
     path('books/<int:pk>/exists/', check_book_exists, name='book-exists'),
+    path('books/<str:isbn>/checkin/', getBookByISBN, name='checkin-book'),
+    path('books/<str:isbn>/isExisting/',checkBookExistsByISBN, name='check-ifExists'),
+    path('books/queue',addToQueue)
 ]

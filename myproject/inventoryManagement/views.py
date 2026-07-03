@@ -228,7 +228,7 @@ def getBookByISBN(request, isbn):
 def checkBookExistsByISBN(request, isbn):
     with connection.cursor() as cursor:
         cursor.execute("SELECT EXISTS(SELECT 1 FROM book WHERE isbn = %s)",[isbn])
-        row = cursor.fetchone();
+        row = cursor.fetchone()
     
     exists=row[0] if row else False
     return Response({"exists": exists}, status=status.HTTP_200_OK)

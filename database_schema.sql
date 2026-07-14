@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict MnpMesZAj9O0sWweXJhtRxiyOrb5J43Ssuv0f23gIeddS2rqaPrGTBvjBr3HaOf
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -3219,5 +3218,5 @@ ALTER TABLE ONLY public.user_register
 -- PostgreSQL database dump complete
 --
 
-\unrestrict MnpMesZAj9O0sWweXJhtRxiyOrb5J43Ssuv0f23gIeddS2rqaPrGTBvjBr3HaOf
+
 

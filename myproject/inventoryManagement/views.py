@@ -273,3 +273,34 @@ def getAllQueueEntries(request):
         })
 
     return Response(queue_list, status=status.HTTP_200_OK)
+
+
+@api_view(["DELETE"])
+def checkinBookByIsbn(request,asset_id):
+    with connection.cursor() as cursor:
+        cursor.execute("DELETE FROM borrowed_books WHERE asset_id = %s ",[asset_id])
+
+    deleted_rows = cursor.rowcount
+
+    if deleted_rows > 0:
+        return Response(
+            {"message": "Book checked in successfully"},
+            status=status.HTTP_200_OK
+        )
+
+    return Response(
+        {"message": "Book not found"},
+        status=status.HTTP_404_NOT_FOUND
+    )
+
+
+@api_view(['GET'])
+def isBorrowed(request,asset_id):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT COUNT(asset_id) FROM borrowed_books WHERE asset_id = %s ",[asset_id])
+        numRows=cursor.fetchone()
+
+    if numRows==0:
+        return Response({"message:book not borrowed"}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response(numRows,status=status.HTTP_200_OK)

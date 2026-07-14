@@ -9,7 +9,9 @@ from inventoryManagement.views import (
     checkBookExistsByISBN,
     check_book_exists,  # Imported functional view
     get_book_by_id,
-    getBookByISBN      # Imported functional view
+    getBookByISBN ,     # Imported functional view,
+    checkinBookByIsbn,
+    isBorrowed
 )
 
 urlpatterns = [
@@ -27,5 +29,7 @@ urlpatterns = [
     path('books/<str:isbn>/checkin/', getBookByISBN, name='checkin-book'),
     path('books/<str:isbn>/isExisting/',checkBookExistsByISBN, name='check-ifExists'),
     path('books/queue',addToQueue),
-    path('book/getQueue',getAllQueueEntries)
+    path('book/getQueue',getAllQueueEntries),
+    path('books/checkin/<str:asset_id>',checkinBookByIsbn,name='checkinBook'),
+    path('books/CheckIfBookExistsByID/<str:asset_id>',isBorrowed,name='isBorrowed')
 ]

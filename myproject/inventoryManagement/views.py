@@ -304,3 +304,122 @@ def isBorrowed(request,asset_id):
         return Response({"message:book not borrowed"}, status=status.HTTP_404_NOT_FOUND)
     else:
         return Response(numRows,status=status.HTTP_200_OK)
+
+
+
+
+# =====================================================================
+# RAW SQL STOCK ITEM MANAGEMENT VIEWS (VIA CONNECTION CURSOR)
+# =====================================================================
+from django.db import connection, transaction
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
+@api_view(['PATCH'])
+def raw_edit_stock_item(request, pk):
+    """
+    Updates a stock item and its subclass details directly via Raw SQL connection.cursor()
+    """
+    data = request.data
+    
+    # 1. Identify which subclass table matches the item Primary Key (multi-table inheritance check)
+    subclass_type = None
+    with connection.cursor() as cursor:
+        # Check Book Stock Item table
+        cursor.execute("SELECT 1 FROM inventorymanagement_bookstockitem WHERE stockitem_ptr_id = %s LIMIT 1", [pk])
+        if cursor.fetchone():
+            subclass_type = 'book'
+            
+        if not subclass_type:
+            # Check Textbook Stock Item table
+            cursor.execute("SELECT 1 FROM inventorymanagement_textbookstockitem WHERE stockitem_ptr_id = %s LIMIT 1", [pk])
+            if cursor.fetchone():
+                subclass_type = 'textbook'
+                
+        if not subclass_type:
+            # Check Food Stock Item table
+            cursor.execute("SELECT 1 FROM inventorymanagement_foodstockitem WHERE stockitem_ptr_id = %s LIMIT 1", [pk])
+            if cursor.fetchone():
+                subclass_type = 'food'
+
+        if not subclass_type:
+            # Check Stationery Stock Item table
+            cursor.execute("SELECT 1 FROM inventorymanagement_stationerystockitem WHERE stockitem_ptr_id = %s LIMIT 1", [pk])
+            if cursor.fetchone():
+                subclass_type = 'stationery'
+
+    # 2. Execute database transactions to update base and child tables
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                # Update properties in the parent StockItem table
+                cursor.execute("""
+                    UPDATE inventorymanagement_stockitem 
+                    SET quantity = %s, location = %s, status = %s, condition = %s, supplier = %s
+                    WHERE id = %s
+                """, [
+                    int(data.get('quantity', 0)),
+                    data.get('location', 'Library'),
+                    data.get('status', 'Available'),
+                    data.get('condition', 'New'),
+                    data.get('supplier', ''),
+                    pk
+                ])
+
+                # Dynamically update the correct polymorphic subclass tables
+                if subclass_type == 'book':
+                    cursor.execute("""
+                        UPDATE inventorymanagement_bookstockitem 
+                        SET author = %s, isbn = %s 
+                        WHERE stockitem_ptr_id = %s
+                    """, [data.get('author'), data.get('isbn'), pk])
+
+                elif subclass_type == 'textbook':
+                    cursor.execute("""
+                        UPDATE inventorymanagement_textbookstockitem 
+                        SET subject = %s, grade = %s 
+                        WHERE stockitem_ptr_id = %s
+                    """, [data.get('subject'), data.get('grade'), pk])
+
+                elif subclass_type == 'food':
+                    cursor.execute("""
+                        UPDATE inventorymanagement_foodstockitem 
+                        SET expiry = %s, batch_number = %s 
+                        WHERE stockitem_ptr_id = %s
+                    """, [data.get('expiry'), data.get('batch_number'), pk])
+
+                elif subclass_type == 'stationery':
+                    cursor.execute("""
+                        UPDATE inventorymanagement_stationerystockitem 
+                        SET stationery_type = %s, pack_size = %s 
+                        WHERE stockitem_ptr_id = %s
+                    """, [data.get('stationeryType'), data.get('packSize'), pk])
+
+        return Response({"message": "Stock item updated successfully via direct SQL."}, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+def raw_remove_stock_item(request, pk):
+    """
+    Removes a stock item from base and subclass tables cascade-wise via direct SQL
+    """
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                # Subclass table deletes (helps bypass foreign key constraint failures if CASCADE is missing)
+                cursor.execute("DELETE FROM book WHERE id = %s", [pk])
+                cursor.execute("DELETE FROM textbook WHERE id = %s", [pk])
+                cursor.execute("DELETE FROM food_item WHERE id = %s", [pk])
+                cursor.execute("DELETE FROM stationery WHERE id = %s", [pk])
+                
+                # Delete from parent table
+                cursor.execute("DELETE FROM inventorymanagement_stockitem WHERE id = %s", [pk])
+
+        return Response({"message": "Stock item deleted successfully via direct SQL."}, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

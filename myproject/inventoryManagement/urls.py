@@ -11,7 +11,9 @@ from inventoryManagement.views import (
     get_book_by_id,
     getBookByISBN ,     # Imported functional view,
     checkinBookByIsbn,
-    isBorrowed
+    isBorrowed,
+    raw_remove_stock_item,
+    raw_edit_stock_item
 )
 
 urlpatterns = [
@@ -31,5 +33,7 @@ urlpatterns = [
     path('books/queue',addToQueue),
     path('book/getQueue',getAllQueueEntries),
     path('books/checkin/<str:asset_id>',checkinBookByIsbn,name='checkinBook'),
-    path('books/CheckIfBookExistsByID/<str:asset_id>',isBorrowed,name='isBorrowed')
+    path('books/CheckIfBookExistsByID/<str:asset_id>',isBorrowed,name='isBorrowed'),
+    path('StockItems/raw-update/<int:pk>/', raw_edit_stock_item, name='raw-edit-stock'),
+    path('StockItems/raw-delete/<int:pk>/', raw_remove_stock_item, name='raw-remove-stock'),
 ]

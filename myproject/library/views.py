@@ -34,4 +34,77 @@ def getAllBooks(request):
 
     return Response(book_list,status=status.HTTP_200_OK)
 
+
+@api_view(['POST'])
+def addBook(request):
+    # Extracting exclusively from the React form state payload
+    title = request.data.get('title')
+    author = request.data.get('author')
+    category = request.data.get('category')
+    copies = request.data.get('quantity')  # Sent as quantity from React payload
+    isbn = request.data.get('isbn')
+    shelf = request.data.get('shelf_number')  # Sent as shelf_number from React payload
+    image = request.data.get('image')
+
+    with connection.cursor() as cursor:
+        sql = """
+            INSERT INTO book (
+                title, 
+                author, 
+                category, 
+                quantity, 
+                isbn, 
+                shelf_number, 
+                image
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id;
+        """
+        cursor.execute(sql, [title, author, category, copies, isbn, shelf, image])
+        new_id = cursor.fetchone()[0]
+
+    # Returning the exact object structural layout expected by the React UI loops
+    return Response({
+        "id": new_id,
+        "title": title,
+        "author": author,
+        "category": category,
+        "copies": copies,
+        "isbn": isbn,
+        "shelf": shelf,
+        "image": image
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+def getBookList(request):
+   
+    list=[]
+    with connection.cursor() as cursor:
+       sql = """
+        SELECT 
+            id, 
+            title, 
+            author, 
+            category, 
+            quantity, 
+            isbn, 
+            shelf_number, 
+            image,
+            COALESCE(available_copies, quantity) AS available
+        FROM book
+        ORDER BY id DESC;
+    """
+       
+       cursor.execute(sql)
+       rows=cursor.fetchall()
+       columns = [col[0] for col in cursor.description]
+       for row in rows:
+           list.append(dict(zip(columns, row)))
+    return Response(list, status=status.HTTP_200_OK)
+           
     
+       
+           
+        
+    
+        
